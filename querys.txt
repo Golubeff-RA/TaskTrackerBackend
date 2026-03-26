@@ -1,0 +1,17 @@
+curl -X POST https://localhost:5273/api/Auth/register \
+  -H "Content-Type: application/json" \
+  -k \
+  -d '{
+    "email": "petr@example.com",
+    "username": "petr456",
+    "password": "Password123!",
+    "confirmPassword": "Password123!"
+  }'
+
+  curl -X POST https://localhost:5273/api/Auth/login \
+  -H "Content-Type: application/json" \
+  -k \
+  -d '{
+    "usernameOrEmail": "ivan123",
+    "password": "Password123!"
+  }'
