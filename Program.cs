@@ -1,26 +1,26 @@
+// Program.cs
+using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using AuthApi.Data;
-using AuthApi.Services;
+using YourApp.Configurations;
+using YourApp.Data;
+using YourApp.Services;
+using YourApp.Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Добавляем сервисы
+// Добавление сервисов
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Настройка базы данных
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+// Конфигурация JWT
+var jwtSettings = builder.Configuration.GetSection("JwtSettings");
+builder.Services.Configure<JwtSettings>(jwtSettings);
 
-// Настройка JWT
-var jwtSettings = builder.Configuration.GetSection("Jwt").Get<JwtSettings>();
-builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("Jwt"));
+var secretKey = Encoding.ASCII.GetBytes(jwtSettings["Secret"]);
 
-// Настройка аутентификации
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -28,51 +28,33 @@ builder.Services.AddAuthentication(options =>
 })
 .AddJwtBearer(options =>
 {
+    options.RequireHttpsMetadata = false;
+    options.SaveToken = true;
     options.TokenValidationParameters = new TokenValidationParameters
     {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
-        ValidIssuer = jwtSettings?.Issuer,
-        ValidAudience = jwtSettings?.Audience,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings?.Key ?? string.Empty))
-    };
-    
-    // Для удобства тестирования из браузера
-    options.Events = new JwtBearerEvents
-    {
-        OnMessageReceived = context =>
-        {
-            var accessToken = context.Request.Query["access_token"];
-            var path = context.HttpContext.Request.Path;
-            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/api"))
-            {
-                context.Token = accessToken;
-            }
-            return Task.CompletedTask;
-        }
+        IssuerSigningKey = new SymmetricSecurityKey(secretKey),
+        ValidateIssuer = true,
+        ValidIssuer = jwtSettings["Issuer"],
+        ValidateAudience = true,
+        ValidAudience = jwtSettings["Audience"],
+        ValidateLifetime = true,
+        ClockSkew = TimeSpan.Zero
     };
 });
 
-// Регистрируем сервисы
-builder.Services.AddScoped<IJwtService, JwtService>();
+// Добавление DbContext
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// Регистрация сервисов
 builder.Services.AddScoped<IAuthService, AuthService>();
-
-// Настройка CORS
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowAll", builder =>
-    {
-        builder.AllowAnyOrigin()
-               .AllowAnyMethod()
-               .AllowAnyHeader();
-    });
-});
+builder.Services.AddScoped<INoteService, NoteService>();
+builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 
 var app = builder.Build();
 
-// Настройка пайплайна
+// Настройка middleware
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -80,24 +62,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
-
-// Автоматическое применение миграций
-using (var scope = app.Services.CreateScope())
-{
-    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    try
-    {
-        dbContext.Database.Migrate();
-        Console.WriteLine("База данных успешно обновлена");
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Ошибка при применении миграций: {ex.Message}");
-    }
-}
 
 app.Run();

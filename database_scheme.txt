@@ -1,0 +1,78 @@
+Таблицы:
+
+users
+    1. UUID user_uuid PK
+    2. TEXT username
+    3. TEXT email
+    4. TEXT password_hash
+    5. TEXT refresh_token
+    6. TIMESTAMP refresh_token_expires_at
+    7. TIMESTAMP created_at
+    8. TIMESTAMP deleted_at
+
+projects
+    1. UUID project_uuid PK
+    2. UUID user_uuid FK
+    3. TEXT project_name
+    4. TEXT description
+    5. ENUM status {CREATED, IN_WORK, FINISHED, CLOSED, DELETED}
+    6. TIMESTAMP created_at
+    7. TIMESTAMP closed_at
+    8. TIMESTAMP deleted_at
+
+tasks
+    1. UUID task_uuid PK
+    2. UUID project_uuid FK
+    3. TEXT title
+    4. TEXT description
+    5. ENUM status {CREATED, BLOCKED, IN_WORK, COMPLETED, CLOSED}
+    6. TIMESTAMP blocked_until
+    7. TIMESTAMP created_at
+    8. TIMESTAMP completed_at
+    9. TIMESTAMP deleted_at
+
+
+marks
+    1. UUID mark_uuid PK
+    2. UUID project_uuid FK
+    3. TEXT title
+    4. TEXT description
+    6. TIMESTAMP created_at
+    7. TIMESTAMP deleted_at
+
+
+notes
+    1. UUID note_uuid PK
+    2. UUID user_uuid FK
+    3. TEXT title
+    4. TEXT content
+    5. TIMESTAMP created_at
+    6. TIMESTAMP deleted_at
+
+contacts
+    1. UUID contact_uuid PK
+    2. UUID user_uuid FK
+    3. TEXT name
+    4. TEXT comment
+    5. TIMESTAMP created_at
+    6. TIMESTAMP deleted_at
+
+
+reference_docs
+    1. UUID doc_uuid PK
+    2. UUID user_uuid FK
+    3. TEXT title
+    4. TEXT content
+    5. TIMESTAMP created_at
+    6. TIMESTAMP updated_at
+    7. TIMESTAMP deleted_at
+
+Связи между таблицами:
+
+users -> projects (1 - много по user_id)
+users -> notes (1 - много по user_id)
+users -> contacts (1 - много по user_id)
+users -> reference_docs (1 - много по user_id)
+
+projects -> tasks (1 - много по project_id)
+projects -> marks (1 - много по project_id)

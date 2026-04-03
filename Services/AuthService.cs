@@ -1,139 +1,199 @@
+// Services/AuthService.cs
+using System;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text;
+using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using AuthApi.Data;
-using AuthApi.Models;
-using AuthApi.Models.DTOs;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
+using YourApp.Configurations;
+using YourApp.Data;
+using YourApp.DTOs.Auth;
+using YourApp.Models;
+using YourApp.Services.Interfaces;
 
-namespace AuthApi.Services
+namespace YourApp.Services
 {
     public class AuthService : IAuthService
     {
         private readonly ApplicationDbContext _context;
-        private readonly IJwtService _jwtService;
-        private readonly ILogger<AuthService> _logger;
-        
+        private readonly JwtSettings _jwtSettings;
+        private readonly IPasswordHasher _passwordHasher;
+
         public AuthService(
-            ApplicationDbContext context, 
-            IJwtService jwtService,
-            ILogger<AuthService> logger)
+            ApplicationDbContext context,
+            IOptions<JwtSettings> jwtSettings,
+            IPasswordHasher passwordHasher)
         {
             _context = context;
-            _jwtService = jwtService;
-            _logger = logger;
+            _jwtSettings = jwtSettings.Value;
+            _passwordHasher = passwordHasher;
         }
-        
+
         public async Task<AuthResponseDto> RegisterAsync(RegisterDto registerDto)
         {
-            // Проверяем, существует ли пользователь
             var existingUser = await _context.Users
-                .FirstOrDefaultAsync(u => u.Email == registerDto.Email || u.Username == registerDto.Username);
-                
+                .FirstOrDefaultAsync(u => u.Username == registerDto.Username || u.Email == registerDto.Email);
+
             if (existingUser != null)
             {
-                throw new InvalidOperationException("Пользователь с таким email или именем уже существует");
+                throw new InvalidOperationException("Пользователь с таким именем или email уже существует");
             }
-            
-            // Создаем нового пользователя
+
             var user = new User
             {
-                Email = registerDto.Email,
                 Username = registerDto.Username,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword(registerDto.Password),
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
+                Email = registerDto.Email,
+                PasswordHash = _passwordHasher.HashPassword(registerDto.Password),
+                CreatedAt = DateTime.UtcNow
             };
-            
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
-            
-            // Генерируем токены
-            var accessToken = _jwtService.GenerateAccessToken(user);
-            var refreshToken = _jwtService.GenerateRefreshToken();
-            
-            // Сохраняем refresh token
+
+            var accessToken = GenerateAccessToken(user);
+            var refreshToken = GenerateRefreshToken();
+
             user.RefreshToken = refreshToken;
-            user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
+            user.RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(_jwtSettings.RefreshTokenExpirationDays);
+
+            await _context.Users.AddAsync(user);
             await _context.SaveChangesAsync();
-            
+
             return new AuthResponseDto
             {
                 AccessToken = accessToken,
                 RefreshToken = refreshToken,
                 Username = user.Username,
                 Email = user.Email,
-                UserId = user.Id
+                UserId = user.UserUuid,
+                AccessTokenExpiresAt = DateTime.UtcNow.AddMinutes(_jwtSettings.AccessTokenExpirationMinutes)
             };
         }
-        
+
         public async Task<AuthResponseDto> LoginAsync(LoginDto loginDto)
         {
-            // Ищем пользователя
             var user = await _context.Users
-                .FirstOrDefaultAsync(u => u.Email == loginDto.UsernameOrEmail || 
-                                         u.Username == loginDto.UsernameOrEmail);
-                                         
-            if (user == null || !BCrypt.Net.BCrypt.Verify(loginDto.Password, user.PasswordHash))
+                .FirstOrDefaultAsync(u => u.Username == loginDto.Username);
+
+            if (user == null)
             {
-                throw new UnauthorizedAccessException("Неверный логин или пароль");
+                throw new UnauthorizedAccessException("Неверное имя пользователя или пароль");
             }
-            
-            // Генерируем новые токены
-            var accessToken = _jwtService.GenerateAccessToken(user);
-            var refreshToken = _jwtService.GenerateRefreshToken();
-            
-            // Обновляем refresh token
+
+            if (!_passwordHasher.VerifyPassword(loginDto.Password, user.PasswordHash))
+            {
+                throw new UnauthorizedAccessException("Неверное имя пользователя или пароль");
+            }
+
+            var accessToken = GenerateAccessToken(user);
+            var refreshToken = GenerateRefreshToken();
+
             user.RefreshToken = refreshToken;
-            user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
-            user.UpdatedAt = DateTime.UtcNow;
+            user.RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(_jwtSettings.RefreshTokenExpirationDays);
+
             await _context.SaveChangesAsync();
-            
+
             return new AuthResponseDto
             {
                 AccessToken = accessToken,
                 RefreshToken = refreshToken,
                 Username = user.Username,
                 Email = user.Email,
-                UserId = user.Id
+                UserId = user.UserUuid,
+                AccessTokenExpiresAt = DateTime.UtcNow.AddMinutes(_jwtSettings.AccessTokenExpirationMinutes)
             };
         }
-        
+
         public async Task<AuthResponseDto> RefreshTokenAsync(string refreshToken)
         {
             var user = await _context.Users
                 .FirstOrDefaultAsync(u => u.RefreshToken == refreshToken);
-                
-            if (user == null || user.RefreshTokenExpiryTime <= DateTime.UtcNow)
+
+            if (user == null || user.RefreshTokenExpiresAt <= DateTime.UtcNow)
             {
-                throw new UnauthorizedAccessException("Недействительный или истекший refresh token");
+                throw new UnauthorizedAccessException("Недействительный или истекший refresh токен");
             }
-            
-            var newAccessToken = _jwtService.GenerateAccessToken(user);
-            var newRefreshToken = _jwtService.GenerateRefreshToken();
-            
+
+            var newAccessToken = GenerateAccessToken(user);
+            var newRefreshToken = GenerateRefreshToken();
+
             user.RefreshToken = newRefreshToken;
-            user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
+            user.RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(_jwtSettings.RefreshTokenExpirationDays);
+
             await _context.SaveChangesAsync();
-            
+
             return new AuthResponseDto
             {
                 AccessToken = newAccessToken,
                 RefreshToken = newRefreshToken,
                 Username = user.Username,
                 Email = user.Email,
-                UserId = user.Id
+                UserId = user.UserUuid,
+                AccessTokenExpiresAt = DateTime.UtcNow.AddMinutes(_jwtSettings.AccessTokenExpirationMinutes)
             };
         }
-        
-        public async Task<bool> LogoutAsync(int userId)
+
+        public async Task<bool> LogoutAsync(Guid userId)
         {
             var user = await _context.Users.FindAsync(userId);
             if (user != null)
             {
                 user.RefreshToken = null;
-                user.RefreshTokenExpiryTime = null;
-                await _context.SaveChangesAsync();
-                return true;
+                user.RefreshTokenExpiresAt = null;
+
+                try
+                {
+                    await _context.SaveChangesAsync();
+                    return true;
+                }
+                catch (DbUpdateException ex)
+                {
+                    Console.WriteLine($"Error during logout: {ex.Message}");
+                    return false;
+                }
             }
             return false;
+        }
+
+        public async Task<bool> ValidateRefreshTokenAsync(string refreshToken, Guid userId)
+        {
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.UserUuid == userId && u.RefreshToken == refreshToken);
+
+            return user != null && user.RefreshTokenExpiresAt > DateTime.UtcNow;
+        }
+
+        private string GenerateAccessToken(User user)
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.ASCII.GetBytes(_jwtSettings.Secret);
+
+            var claims = new[]
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.UserUuid.ToString()),
+                new Claim(ClaimTypes.Name, user.Username),
+                new Claim(ClaimTypes.Email, user.Email)
+            };
+
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(claims),
+                Expires = DateTime.UtcNow.AddMinutes(_jwtSettings.AccessTokenExpirationMinutes),
+                Issuer = _jwtSettings.Issuer,
+                Audience = _jwtSettings.Audience,
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+            };
+
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            return tokenHandler.WriteToken(token);
+        }
+
+        private string GenerateRefreshToken()
+        {
+            var randomNumber = new byte[32];
+            using var rng = RandomNumberGenerator.Create();
+            rng.GetBytes(randomNumber);
+            return Convert.ToBase64String(randomNumber);
         }
     }
 }
