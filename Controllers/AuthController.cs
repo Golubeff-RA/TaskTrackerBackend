@@ -1,4 +1,3 @@
-// Controllers/AuthController.cs
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -8,6 +7,9 @@ using YourApp.Extensions;
 
 namespace YourApp.Controllers
 {
+    /// <summary>
+    /// Контроллер для аутентификации пользователей
+    /// </summary>
     [ApiController]
     [Route("api/[controller]")]
     public class AuthController : ControllerBase
@@ -19,7 +21,16 @@ namespace YourApp.Controllers
             _authService = authService;
         }
 
+        /// <summary>
+        /// Регистрация нового пользователя
+        /// </summary>
+        /// <param name="registerDto">Данные для регистрации</param>
+        /// <returns>Токены доступа</returns>
+        /// <response code="200">Успешная регистрация</response>
+        /// <response code="400">Ошибка валидации или пользователь уже существует</response>
         [HttpPost("register")]
+        [ProducesResponseType(typeof(AuthResponseDto), 200)]
+        [ProducesResponseType(400)]
         public async Task<IActionResult> Register([FromBody] RegisterDto registerDto)
         {
             try
@@ -33,7 +44,16 @@ namespace YourApp.Controllers
             }
         }
 
+        /// <summary>
+        /// Вход пользователя
+        /// </summary>
+        /// <param name="loginDto">Данные для входа</param>
+        /// <returns>Токены доступа</returns>
+        /// <response code="200">Успешный вход</response>
+        /// <response code="401">Неверные учетные данные</response>
         [HttpPost("login")]
+        [ProducesResponseType(typeof(AuthResponseDto), 200)]
+        [ProducesResponseType(401)]
         public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
         {
             try
@@ -47,7 +67,16 @@ namespace YourApp.Controllers
             }
         }
 
+        /// <summary>
+        /// Обновление токена доступа
+        /// </summary>
+        /// <param name="refreshTokenDto">Refresh токен</param>
+        /// <returns>Новая пара токенов</returns>
+        /// <response code="200">Токен успешно обновлен</response>
+        /// <response code="401">Недействительный refresh токен</response>
         [HttpPost("refresh")]
+        [ProducesResponseType(typeof(AuthResponseDto), 200)]
+        [ProducesResponseType(401)]
         public async Task<IActionResult> Refresh([FromBody] RefreshTokenDto refreshTokenDto)
         {
             try
@@ -61,8 +90,16 @@ namespace YourApp.Controllers
             }
         }
 
+        /// <summary>
+        /// Выход пользователя (инвалидация refresh токена)
+        /// </summary>
+        /// <returns>Статус выхода</returns>
+        /// <response code="200">Успешный выход</response>
+        /// <response code="401">Требуется авторизация</response>
         [Authorize]
         [HttpPost("logout")]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(401)]
         public async Task<IActionResult> Logout()
         {
             var userId = User.GetUserId();
