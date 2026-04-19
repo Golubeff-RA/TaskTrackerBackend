@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace YourApp.DTOs.Marks
 {
     public class UpdateMarkDto

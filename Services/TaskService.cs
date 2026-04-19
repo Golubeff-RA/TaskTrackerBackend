@@ -127,7 +127,7 @@ namespace YourApp.Services
             ProjectUuid = t.ProjectUuid,
             Title = t.Title,
             Description = t.Description,
-            Status = (int)t.Status,
+            Status = t.Status,
             Wave = t.Wave,
             CreatedAt = t.CreatedAt,
             BlockedUntil = t.BlockedUntil,

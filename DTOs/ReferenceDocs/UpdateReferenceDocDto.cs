@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace YourApp.DTOs.ReferenceDocs
 {
     public class UpdateReferenceDocDto
