@@ -27,6 +27,9 @@ namespace YourApp.Models
         [Column("status")]
         public TaskaStatus Status { get; set; } = TaskaStatus.CREATED;
 
+        [Column("wave")]
+        public int Wave { get; set; } = 0;
+
         [Column("blocked_until")]
         public DateTime? BlockedUntil { get; set; }
 
