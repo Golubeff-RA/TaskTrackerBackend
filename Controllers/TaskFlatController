@@ -7,8 +7,7 @@ using YourApp.Services.Interfaces;
 namespace YourApp.Controllers
 {
     /// <summary>
-    /// Операции над конкретной задачей (не требуют projectId в пути)
-    /// и рандомная задача для кнопки "Дай задачу".
+    /// Операции над конкретной задачей
     /// </summary>
     [ApiController]
     [Route("api/tasks")]
@@ -33,10 +32,10 @@ namespace YourApp.Controllers
         {
             var userId = User.GetUserId();
             var task = await _taskService.GetRandomTaskAsync(userId);
-            return Ok(task); // null — валидный ответ 200 по спеке
+            return Ok(task);
         }
 
-        /// <summary>Изменить задачу (частичное обновление)</summary>
+        /// <summary>Изменить задачу</summary>
         [HttpPatch("{taskId}")]
         [ProducesResponseType(typeof(TaskResponseDto), 200)]
         [ProducesResponseType(404)]
@@ -55,7 +54,7 @@ namespace YourApp.Controllers
             }
         }
 
-        /// <summary>Завершить задачу (статус → COMPLETED)</summary>
+        /// <summary>Завершить задачу</summary>
         [HttpPost("{taskId}/complete")]
         [ProducesResponseType(typeof(TaskResponseDto), 200)]
         [ProducesResponseType(404)]
@@ -71,7 +70,7 @@ namespace YourApp.Controllers
             return Ok(task);
         }
 
-        /// <summary>Заблокировать задачу (статус → BLOCKED)</summary>
+        /// <summary>Заблокировать задачу</summary>
         [HttpPost("{taskId}/block")]
         [ProducesResponseType(typeof(TaskResponseDto), 200)]
         [ProducesResponseType(404)]
