@@ -19,8 +19,11 @@ namespace YourApp.Controllers
         }
 
         /// <summary>
-        /// Список контактов пользователя
+        /// Получение всех контактов текущего пользователя
         /// </summary>
+        /// <returns>Список контактов</returns>
+        /// <response code="200">Успешное получение списка контактов</response>
+        /// <response code="401">Не авторизован</response>
         [HttpGet]
         [ProducesResponseType(typeof(List<ContactResponseDto>), 200)]
         [ProducesResponseType(401)]
@@ -32,8 +35,13 @@ namespace YourApp.Controllers
         }
 
         /// <summary>
-        /// Получить контакт по ID
+        /// Получение контакта по ID
         /// </summary>
+        /// <param name="id">UUID контакта</param>
+        /// <returns>Контакт</returns>
+        /// <response code="200">Контакт найден</response>
+        /// <response code="404">Контакт не найден</response>
+        /// <response code="401">Не авторизован</response>
         [HttpGet("{id}")]
         [ProducesResponseType(typeof(ContactResponseDto), 200)]
         [ProducesResponseType(404)]
@@ -53,8 +61,13 @@ namespace YourApp.Controllers
         }
 
         /// <summary>
-        /// Создать контакт
+        /// Создание нового контакта
         /// </summary>
+        /// <param name="createContactDto">Данные для создания контакта</param>
+        /// <returns>Созданный контакт</returns>
+        /// <response code="201">Контакт успешно создан</response>
+        /// <response code="400">Ошибка валидации</response>
+        /// <response code="401">Не авторизован</response>
         [HttpPost]
         [ProducesResponseType(typeof(ContactResponseDto), 200)]
         [ProducesResponseType(400)]
@@ -67,8 +80,15 @@ namespace YourApp.Controllers
         }
 
         /// <summary>
-        /// Изменить контакт
+        /// Обновление контакта
         /// </summary>
+        /// <param name="id">UUID контакта</param>
+        /// <param name="updateContactDto">Обновленные данные контакта</param>
+        /// <returns>Обновленный контакт</returns>
+        /// <response code="200">Контакт успешно обновлен</response>
+        /// <response code="404">Контакт не найден</response>
+        /// <response code="400">Ошибка валидации</response>
+        /// <response code="401">Не авторизован</response>
         [HttpPatch("{id}")]
         [ProducesResponseType(typeof(ContactResponseDto), 200)]
         [ProducesResponseType(404)]
@@ -88,8 +108,12 @@ namespace YourApp.Controllers
         }
 
         /// <summary>
-        /// Удалить контакт
+        /// Полное удаление контакта (из базы данных)
         /// </summary>
+        /// <param name="id">UUID контакта</param>
+        /// <response code="204">Контакт успешно удален</response>
+        /// <response code="404">Контакт не найден</response>
+        /// <response code="401">Не авторизован</response>
         [HttpDelete("{id}")]
         [ProducesResponseType(typeof(ContactResponseDto), 200)]
         [ProducesResponseType(404)]

@@ -8,6 +8,6 @@ namespace YourApp.Services.Interfaces
         Task<ProjectResponseDto> GetProjectByIdAsync(Guid userId, Guid projectId);
         Task<ProjectResponseDto> CreateProjectAsync(Guid userId, CreateProjectDto dto);
         Task<ProjectResponseDto> UpdateProjectAsync(Guid userId, Guid projectId, UpdateProjectDto dto);
-        Task<bool> CloseProjectAsync(Guid userId, Guid projectId);
+        Task<ProjectResponseDto?> CloseProjectAsync(Guid userId, Guid projectId);
     }
 }

@@ -72,22 +72,24 @@ namespace YourApp.Controllers
         /// <summary>
         /// Изменить справку
         /// </summary>
-        [HttpPut("{id}")]
+        [HttpPatch("{id}")]
         [ProducesResponseType(typeof(ReferenceDocResponseDto), 200)]
         [ProducesResponseType(404)]
         [ProducesResponseType(401)]
         public async Task<IActionResult> Update(Guid id, [FromBody] UpdateReferenceDocDto dto)
         {
-            try
-            {
-                var userId = User.GetUserId();
-                var doc = await _service.UpdateAsync(userId, id, dto);
-                return Ok(doc);
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new { message = ex.Message });
-            }
+            var doc = await _context.ReferenceDocs
+                .FirstOrDefaultAsync(d => d.DocUuid == docId && d.UserUuid == userId);
+ 
+            if (doc == null)
+                throw new KeyNotFoundException($"Reference doc with ID {docId} not found");
+ 
+            if (dto.Title != null) doc.Title = dto.Title;
+            if (dto.Content != null) doc.Content = dto.Content;
+            doc.UpdatedAt = DateTime.UtcNow;
+ 
+            await _context.SaveChangesAsync();
+            return Map(doc);
         }
 
         /// <summary>
