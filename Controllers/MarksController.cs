@@ -6,9 +6,6 @@ using YourApp.Services.Interfaces;
 
 namespace YourApp.Controllers
 {
-    /// <summary>
-    /// Управление пометками проекта
-    /// </summary>
     [ApiController]
     [Route("api/projects/{projectId}/marks")]
     [Authorize]
@@ -38,7 +35,7 @@ namespace YourApp.Controllers
             }
             catch (KeyNotFoundException ex)
             {
-                return NotFound(new { message = ex.Message });
+                return NotFound(new { error = ex.Message });
             }
         }
 
@@ -46,7 +43,7 @@ namespace YourApp.Controllers
         /// Создать пометку в проекте
         /// </summary>
         [HttpPost]
-        [ProducesResponseType(typeof(MarkResponseDto), 201)]
+        [ProducesResponseType(typeof(MarkResponseDto), 200)]
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]
         [ProducesResponseType(401)]
@@ -56,18 +53,18 @@ namespace YourApp.Controllers
             {
                 var userId = User.GetUserId();
                 var mark = await _markService.CreateMarkAsync(userId, projectId, dto);
-                return StatusCode(201, mark);
+                return Ok(mark);
             }
             catch (KeyNotFoundException ex)
             {
-                return NotFound(new { message = ex.Message });
+                return NotFound(new { error = ex.Message });
             }
         }
 
         /// <summary>
         /// Изменить пометку
         /// </summary>
-        [HttpPut("{markId}")]
+        [HttpPatch("{markId}")]
         [ProducesResponseType(typeof(MarkResponseDto), 200)]
         [ProducesResponseType(404)]
         [ProducesResponseType(401)]
@@ -81,7 +78,7 @@ namespace YourApp.Controllers
             }
             catch (KeyNotFoundException ex)
             {
-                return NotFound(new { message = ex.Message });
+                return NotFound(new { error = ex.Message });
             }
         }
 
@@ -89,18 +86,18 @@ namespace YourApp.Controllers
         /// Удалить пометку (soft delete)
         /// </summary>
         [HttpDelete("{markId}")]
-        [ProducesResponseType(200)]
+        [ProducesResponseType(typeof(MarkResponseDto), 200)]
         [ProducesResponseType(404)]
         [ProducesResponseType(401)]
         public async Task<IActionResult> Delete(Guid projectId, Guid markId)
         {
             var userId = User.GetUserId();
-            var result = await _markService.DeleteMarkAsync(userId, markId);
+            var mark = await _markService.DeleteMarkAsync(userId, markId);
 
-            if (!result)
-                return NotFound(new { message = "The tag was not found" });
+            if (mark == null)
+                return NotFound(new { error = "Mark not found" });
 
-            return Ok(new { message = "The mark has been deleted" });
+            return Ok(mark);
         }
     }
 }
