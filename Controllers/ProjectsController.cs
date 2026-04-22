@@ -100,10 +100,10 @@ namespace YourApp.Controllers
         public async Task<IActionResult> Close(Guid id)
         {
             var userId = User.GetUserId();
-            var result = await _projectService.CloseProjectAsync(userId, id);
-
-            if (!result)
-                return NotFound(new { message = "Проект не найден" });
+            var project = await _projectService.CloseProjectAsync(userId, id);
+            if (project == null)
+                return NotFound(new { error = "Проект не найден" });
+            return Ok(project);
 
             return Ok(new { message = "Проект закрыт" });
         }
