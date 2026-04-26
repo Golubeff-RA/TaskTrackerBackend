@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using YourApp.Data;
 using YourApp.DTOs.ReferenceDocs;
+using YourApp.Extensions;
 using YourApp.Models;
 using YourApp.Services.Interfaces;
 
@@ -88,9 +89,9 @@ namespace YourApp.Services
             UserUuid = d.UserUuid,
             Title = d.Title,
             Content = d.Content,
-            CreatedAt = d.CreatedAt,
-            UpdatedAt = d.UpdatedAt,
-            DeletedAt = d.DeletedAt
+            CreatedAt = d.CreatedAt.ToUnixMs(),
+            UpdatedAt = d.UpdatedAt.ToUnixMs(),
+            DeletedAt = d.DeletedAt.ToUnixMs()
         };
     }
 }

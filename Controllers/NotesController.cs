@@ -33,6 +33,27 @@ namespace YourApp.Controllers
         }
 
         /// <summary>
+        /// Обновить заметку
+        /// </summary>
+        [HttpPatch("{id}")]
+        [ProducesResponseType(typeof(NoteResponseDto), 200)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(401)]
+        public async Task<IActionResult> Update(Guid id, [FromBody] UpdateNoteDto dto)
+        {
+            try
+            {
+                var userId = User.GetUserId();
+                var note = await _noteService.UpdateNoteAsync(userId, id, dto);
+                return Ok(note);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { error = ex.Message });
+            }
+        }
+
+        /// <summary>
         /// Список всех заметок пользователя
         /// </summary>
         [HttpGet]

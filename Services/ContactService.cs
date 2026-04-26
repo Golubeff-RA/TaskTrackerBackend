@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using YourApp.Data;
 using YourApp.DTOs.Contacts;
+using YourApp.Extensions;
 using YourApp.Models;
 using YourApp.Services.Interfaces;
 
@@ -138,8 +139,8 @@ namespace YourApp.Services
                 PhoneNumber = contact.PhoneNumber,
                 Email = contact.Email,
                 Comment = contact.Comment,
-                CreatedAt = contact.CreatedAt,
-                DeletedAt = contact.DeletedAt
+                CreatedAt = contact.CreatedAt.ToUnixMs(),
+                DeletedAt = contact.DeletedAt.ToUnixMs()
             };
         }
     }

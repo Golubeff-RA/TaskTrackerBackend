@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using YourApp.Data;
 using YourApp.DTOs.Marks;
+using YourApp.Extensions;
 using YourApp.Models;
 using YourApp.Services.Interfaces;
 
@@ -91,8 +92,8 @@ namespace YourApp.Services
             ProjectUuid = m.ProjectUuid,
             Title = m.Title,
             Description = m.Description,
-            CreatedAt = m.CreatedAt,
-            DeletedAt = m.DeletedAt
+            CreatedAt = m.CreatedAt.ToUnixMs(),
+            DeletedAt = m.DeletedAt.ToUnixMs()
         };
     }
 }

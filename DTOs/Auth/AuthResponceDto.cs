@@ -8,6 +8,6 @@ namespace YourApp.DTOs.Auth
         public string Username { get; set; }
         public string Email { get; set; }
         public Guid UserId { get; set; }
-        public DateTime AccessTokenExpiresAt { get; set; }
+        public long AccessTokenExpiresAt { get; set; }
     }
 }

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using YourApp.Data;
 using YourApp.DTOs.Notes;
+using YourApp.Extensions;
 using YourApp.Models;
 using YourApp.Services.Interfaces;
 
@@ -112,8 +113,8 @@ namespace YourApp.Services
                 NoteUuid = note.NoteUuid,
                 Title = note.Title,
                 Content = note.Content,
-                CreatedAt = note.CreatedAt,
-                DeletedAt = note.DeletedAt
+                CreatedAt = note.CreatedAt.ToUnixMs(),
+                DeletedAt = note.DeletedAt.ToUnixMs()
             };
         }
     }

@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using YourApp.Data;
 using YourApp.DTOs.Projects;
 using YourApp.Enums;
+using YourApp.Extensions;
 using YourApp.Models;
 using YourApp.Services.Interfaces;
 
@@ -67,6 +68,7 @@ namespace YourApp.Services
 
             if (dto.ProjectName != null) project.ProjectName = dto.ProjectName;
             if (dto.Description != null) project.Description = dto.Description;
+            if (dto.Status.HasValue) project.Status = dto.Status.Value;
 
             await _context.SaveChangesAsync();
             return Map(project);
@@ -91,10 +93,10 @@ namespace YourApp.Services
             UserUuid = p.UserUuid,
             ProjectName = p.ProjectName,
             Description = p.Description,
-            Status = p.Status,
-            CreatedAt = p.CreatedAt,
-            ClosedAt = p.ClosedAt,
-            DeletedAt = p.DeletedAt
+            Status = (int)p.Status,
+            CreatedAt = p.CreatedAt.ToUnixMs(),
+            ClosedAt = p.ClosedAt.ToUnixMs(),
+            DeletedAt = p.DeletedAt.ToUnixMs()
         };
     }
 }

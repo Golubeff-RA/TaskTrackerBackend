@@ -46,11 +46,11 @@ namespace YourApp.DTOs.Contacts
         /// Дата создания
         /// </summary>
         /// <example>2024-01-15T10:30:00Z</example>
-        public DateTime CreatedAt { get; set; }
+        public long CreatedAt { get; set; }
 
         /// <summary>
         /// Дата удаления (мягкое удаление)
         /// </summary>
-        public DateTime? DeletedAt { get; set; }
+        public long? DeletedAt { get; set; }
     }
 }
