@@ -8,7 +8,7 @@ namespace YourApp.DTOs.Notes
         public Guid NoteUuid { get; set; }
         public string Title { get; set; }
         public string Content { get; set; }
-        public DateTime CreatedAt { get; set; }
-        public DateTime? DeletedAt { get; set; }
+        public long CreatedAt { get; set; }
+        public long? DeletedAt { get; set; }
     }
 }

@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using YourApp.Data;
 using YourApp.DTOs.Tasks;
 using YourApp.Enums;
+using YourApp.Extensions;
 using YourApp.Models;
 using YourApp.Services.Interfaces;
 
@@ -29,6 +30,17 @@ namespace YourApp.Services
 
             var tasks = await _context.Tasks
                 .Where(t => t.ProjectUuid == projectId)
+                .OrderByDescending(t => t.CreatedAt)
+                .ToListAsync();
+
+            return tasks.Select(Map).ToList();
+        }
+
+        public async Task<List<TaskResponseDto>> GetAllTasksAsync(Guid userId)
+        {
+            var tasks = await _context.Tasks
+                .Include(t => t.Project)
+                .Where(t => t.Project.UserUuid == userId)
                 .OrderByDescending(t => t.CreatedAt)
                 .ToListAsync();
 
@@ -84,6 +96,8 @@ namespace YourApp.Services
             if (dto.Title != null) task.Title = dto.Title;
             if (dto.Description != null) task.Description = dto.Description;
             if (dto.Wave.HasValue) task.Wave = dto.Wave.Value; 
+            if (dto.Status.HasValue) task.Status = dto.Status.Value;
+            if (dto.BlockedUntilMs.HasValue) task.BlockedUntil = dto.BlockedUntilMs.Value.FromUnixMs();
 
             await _context.SaveChangesAsync();
             return Map(task);
@@ -112,9 +126,23 @@ namespace YourApp.Services
 
             task.Status = TaskaStatus.BLOCKED;
             task.BlockedUntil = dto.BlockedUntilMs.HasValue
-                ? DateTimeOffset.FromUnixTimeMilliseconds(dto.BlockedUntilMs.Value).UtcDateTime
+                ? dto.BlockedUntilMs.Value.FromUnixMs()
                 : null;
 
+            await _context.SaveChangesAsync();
+
+            return Map(task);
+        }
+
+        public async Task<TaskResponseDto?> UnblockTaskAsync(Guid userId, Guid taskId)
+        {
+            var task = await _context.Tasks
+                .Include(t => t.Project)
+                .FirstOrDefaultAsync(t => t.TaskUuid == taskId && t.Project.UserUuid == userId);
+            if (task == null) return null;
+
+            task.Status = TaskaStatus.CREATED;
+            task.BlockedUntil = null;
             await _context.SaveChangesAsync();
 
             return Map(task);
@@ -137,12 +165,12 @@ namespace YourApp.Services
             ProjectUuid = t.ProjectUuid,
             Title = t.Title,
             Description = t.Description,
-            Status = t.Status,
+            Status = (int)t.Status,
             Wave = t.Wave,
-            CreatedAt = t.CreatedAt,
-            BlockedUntil = t.BlockedUntil,
-            CompletedAt = t.CompletedAt,
-            DeletedAt = t.DeletedAt
+            CreatedAt = t.CreatedAt.ToUnixMs(),
+            BlockedUntil = t.BlockedUntil.ToUnixMs() ?? 0,
+            CompletedAt = t.CompletedAt.ToUnixMs(),
+            DeletedAt = t.DeletedAt.ToUnixMs()
         };
     }
 }

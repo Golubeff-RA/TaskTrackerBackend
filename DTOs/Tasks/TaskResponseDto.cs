@@ -8,11 +8,11 @@ namespace YourApp.DTOs.Tasks
         public Guid ProjectUuid { get; set; }
         public string Title { get; set; }
         public string Description { get; set; }
-        public TaskaStatus Status { get; set; }
+        public int Status { get; set; }
         public int Wave { get; set; }
-        public DateTime CreatedAt { get; set; }
-        public DateTime? BlockedUntil { get; set; }
-        public DateTime? CompletedAt { get; set; }
-        public DateTime? DeletedAt { get; set; }
+        public long CreatedAt { get; set; }
+        public long? BlockedUntil { get; set; }
+        public long? CompletedAt { get; set; }
+        public long? DeletedAt { get; set; }
     }
 }

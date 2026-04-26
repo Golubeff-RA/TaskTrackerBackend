@@ -11,6 +11,7 @@ using Microsoft.IdentityModel.Tokens;
 using YourApp.Configurations;
 using YourApp.Data;
 using YourApp.DTOs.Auth;
+using YourApp.Extensions;
 using YourApp.Models;
 using YourApp.Services.Interfaces;
 
@@ -66,7 +67,7 @@ namespace YourApp.Services
                 Username = user.Username,
                 Email = user.Email,
                 UserId = user.UserUuid,
-                AccessTokenExpiresAt = DateTime.UtcNow.AddMinutes(_jwtSettings.AccessTokenExpirationMinutes)
+                AccessTokenExpiresAt = DateTime.UtcNow.AddMinutes(_jwtSettings.AccessTokenExpirationMinutes).ToUnixMs()
             };
         }
 
@@ -100,7 +101,7 @@ namespace YourApp.Services
                 Username = user.Username,
                 Email = user.Email,
                 UserId = user.UserUuid,
-                AccessTokenExpiresAt = DateTime.UtcNow.AddMinutes(_jwtSettings.AccessTokenExpirationMinutes)
+                AccessTokenExpiresAt = DateTime.UtcNow.AddMinutes(_jwtSettings.AccessTokenExpirationMinutes).ToUnixMs()
             };
         }
 
@@ -129,7 +130,7 @@ namespace YourApp.Services
                 Username = user.Username,
                 Email = user.Email,
                 UserId = user.UserUuid,
-                AccessTokenExpiresAt = DateTime.UtcNow.AddMinutes(_jwtSettings.AccessTokenExpirationMinutes)
+                AccessTokenExpiresAt = DateTime.UtcNow.AddMinutes(_jwtSettings.AccessTokenExpirationMinutes).ToUnixMs()
             };
         }
 

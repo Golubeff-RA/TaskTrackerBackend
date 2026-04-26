@@ -22,6 +22,19 @@ namespace YourApp.Controllers
         }
 
         /// <summary>
+        /// Все задачи пользователя по всем проектам
+        /// </summary>
+        [HttpGet]
+        [ProducesResponseType(typeof(List<TaskResponseDto>), 200)]
+        [ProducesResponseType(401)]
+        public async Task<IActionResult> GetAll()
+        {
+            var userId = User.GetUserId();
+            var tasks = await _taskService.GetAllTasksAsync(userId);
+            return Ok(tasks);
+        }
+
+        /// <summary>
         /// Рандомная активная задача из всех проектов пользователя.
         /// Возвращает null если нет активных задач.
         /// </summary>
@@ -54,42 +67,6 @@ namespace YourApp.Controllers
             {
                 return NotFound(new { error = ex.Message });
             }
-        }
-
-        /// <summary>
-        /// Завершить задачу
-        /// </summary>
-        [HttpPost("{taskId}/close")]
-        [ProducesResponseType(typeof(TaskResponseDto), 200)]
-        [ProducesResponseType(404)]
-        [ProducesResponseType(401)]
-        public async Task<IActionResult> Close(Guid taskId)
-        {
-            var userId = User.GetUserId();
-            var task = await _taskService.CloseTaskAsync(userId, taskId);
-
-            if (task == null)
-                return NotFound(new { error = "Task not found" });
-
-            return Ok(task);
-        }
-
-        /// <summary>
-        /// Заблокировать задачу
-        /// </summary>
-        [HttpPost("{taskId}/block")]
-        [ProducesResponseType(typeof(TaskResponseDto), 200)]
-        [ProducesResponseType(404)]
-        [ProducesResponseType(401)]
-        public async Task<IActionResult> Block(Guid taskId, [FromBody] BlockTaskDto dto)
-        {
-            var userId = User.GetUserId();
-            var task = await _taskService.BlockTaskAsync(userId, taskId, dto);
-
-            if (task == null)
-                return NotFound(new { error = "Task not found" });
-
-            return Ok(task);
         }
     }
 }
