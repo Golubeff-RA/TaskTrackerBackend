@@ -100,12 +100,12 @@ namespace YourApp.Controllers
         public async Task<IActionResult> Delete(Guid id)
         {
             var userId = User.GetUserId();
-            var result = await _service.DeleteAsync(userId, id);
+            
+            var doc = await _service.DeleteAsync(userId, id);
+            if (doc == null)
+                return NotFound(new { error = "Reference not found" });
 
-            if (!result)
-                return NotFound(new { message = "Reference was not found" });
-
-            return Ok(new { message = "Reference has been deleted" });
+            return Ok(doc);
         }
     }
 }
