@@ -83,7 +83,7 @@ namespace YourApp.Services
 
             if (dto.Title != null) task.Title = dto.Title;
             if (dto.Description != null) task.Description = dto.Description;
-            if (dto.Wave.HasValue) task.Wave = dto.Wave; 
+            if (dto.Wave.HasValue) task.Wave = dto.Wave.Value; 
 
             await _context.SaveChangesAsync();
             return Map(task);
@@ -137,7 +137,7 @@ namespace YourApp.Services
             ProjectUuid = t.ProjectUuid,
             Title = t.Title,
             Description = t.Description,
-            Status = (int)t.Status,
+            Status = t.Status,
             Wave = t.Wave,
             CreatedAt = t.CreatedAt,
             BlockedUntil = t.BlockedUntil,

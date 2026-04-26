@@ -91,7 +91,7 @@ namespace YourApp.Services
             UserUuid = p.UserUuid,
             ProjectName = p.ProjectName,
             Description = p.Description,
-            Status = (int)p.Status,
+            Status = p.Status,
             CreatedAt = p.CreatedAt,
             ClosedAt = p.ClosedAt,
             DeletedAt = p.DeletedAt
