@@ -6,6 +6,7 @@ namespace YourApp.Services.Interfaces
     {
         Task<ContactResponseDto> CreateContactAsync(Guid userId, CreateContactDto dto);
         Task<ContactResponseDto> GetContactByIdAsync(Guid userId, Guid contactId);
+        Task<List<ContactResponseDto>> SearchContactsAsync(Guid userId, string searchTerm);
         Task<List<ContactResponseDto>> GetAllContactsAsync(Guid userId);
         Task<ContactResponseDto> UpdateContactAsync(Guid userId, Guid contactId, UpdateContactDto dto);
         Task<ContactResponseDto?> DeleteContactAsync(Guid userId, Guid contactId);

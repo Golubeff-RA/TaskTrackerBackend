@@ -85,10 +85,10 @@ namespace YourApp.Services
                 throw new KeyNotFoundException($"Контакт с ID {contactId} не найден");
             }
 
-            contact.Name = updateContactDto.Name;
-            contact.PhoneNumber = updateContactDto.PhoneNumber;
-            contact.Email = updateContactDto.Email;
-            contact.Comment = updateContactDto.Comment;
+            if (updateContactDto.Name != null) contact.Name = updateContactDto.Name;
+            if (updateContactDto.PhoneNumber != null) contact.PhoneNumber = updateContactDto.PhoneNumber;
+            if (updateContactDto.Email != null) contact.Email = updateContactDto.Email;
+            if (updateContactDto.Comment != null) contact.Comment = updateContactDto.Comment;
 
             await _context.SaveChangesAsync();
 
@@ -97,40 +97,16 @@ namespace YourApp.Services
             return MapToResponseDto(contact);
         }
 
-        public async Task<bool> DeleteContactAsync(Guid userId, Guid contactId)
+        public async Task<ContactResponseDto?> DeleteContactAsync(Guid userId, Guid contactId)
         {
             var contact = await _context.Contacts
                 .FirstOrDefaultAsync(c => c.ContactUuid == contactId && c.UserUuid == userId);
-
-            if (contact == null)
-            {
-                return false;
-            }
-
-            _context.Contacts.Remove(contact);
-            await _context.SaveChangesAsync();
-
-            _logger.LogInformation($"Contact permanently deleted: {contactId}");
-
-            return true;
-        }
-
-        public async Task<bool> SoftDeleteContactAsync(Guid userId, Guid contactId)
-        {
-            var contact = await _context.Contacts
-                .FirstOrDefaultAsync(c => c.ContactUuid == contactId && c.UserUuid == userId);
-
-            if (contact == null)
-            {
-                return false;
-            }
+            if (contact == null) return null;
 
             contact.DeletedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
 
-            _logger.LogInformation($"Contact soft deleted: {contactId}");
-
-            return true;
+            return MapToResponseDto(contact);
         }
 
         public async Task<List<ContactResponseDto>> SearchContactsAsync(Guid userId, string searchTerm)
