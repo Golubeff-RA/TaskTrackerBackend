@@ -8,7 +8,7 @@ namespace YourApp.Services.Interfaces
         Task<TaskResponseDto> GetTaskByIdAsync(Guid userId, Guid taskId);
         Task<TaskResponseDto> CreateTaskAsync(Guid userId, Guid projectId, CreateTaskDto dto);
         Task<TaskResponseDto> UpdateTaskAsync(Guid userId, Guid taskId, UpdateTaskDto dto);
-        Task<TaskResponseDto?> CompleteTaskAsync(Guid userId, Guid taskId);
+        Task<TaskResponseDto?> CloseTaskAsync(Guid userId, Guid taskId);
         Task<TaskResponseDto?> BlockTaskAsync(Guid userId, Guid taskId, BlockTaskDto dto);
         Task<TaskResponseDto?> GetRandomTaskAsync(Guid userId);
     }

@@ -10,6 +10,6 @@ namespace YourApp.DTOs.Tasks
 
         public string Description { get; set; } = string.Empty;
 
-        public int Wave { get; set; } = 0;
+        public int? Wave { get; set; }
     }
 }

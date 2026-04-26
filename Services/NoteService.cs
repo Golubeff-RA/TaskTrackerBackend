@@ -101,23 +101,8 @@ namespace YourApp.Services
 
             note.DeletedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
-                
+
             return MapToResponseDto(note);
-        }
-
-        public async Task<bool> SoftDeleteNoteAsync(Guid userId, Guid noteId)
-        {
-            var note = await _context.Notes
-                .FirstOrDefaultAsync(n => n.NoteUuid == noteId && n.UserUuid == userId);
-
-            if (note == null)
-            {
-                return false;
-            }
-
-            note.DeletedAt = DateTime.UtcNow;
-            await _context.SaveChangesAsync();
-            return true;
         }
 
         private NoteResponseDto MapToResponseDto(Note note)
