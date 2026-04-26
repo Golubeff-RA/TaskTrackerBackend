@@ -65,25 +65,24 @@ namespace YourApp.Services
             if (project == null)
                 throw new KeyNotFoundException($"Project with ID {projectId} not found");
 
-            project.ProjectName = dto.ProjectName;
-            project.Description = dto.Description;
+            if (dto.ProjectName != null) project.ProjectName = dto.ProjectName;
+            if (dto.Description != null) project.Description = dto.Description;
 
             await _context.SaveChangesAsync();
             return Map(project);
         }
 
-        public async Task<bool> CloseProjectAsync(Guid userId, Guid projectId)
+        public async Task<ProjectResponseDto?> CloseProjectAsync(Guid userId, Guid projectId)
         {
             var project = await _context.Projects
                 .FirstOrDefaultAsync(p => p.ProjectUuid == projectId && p.UserUuid == userId);
-
-            if (project == null) return false;
+            if (project == null) return null;
 
             project.Status = ProjectStatus.CLOSED;
             project.ClosedAt = DateTime.UtcNow;
-
             await _context.SaveChangesAsync();
-            return true;
+
+            return Map(project);
         }
 
         private static ProjectResponseDto Map(Project p) => new()
@@ -92,7 +91,7 @@ namespace YourApp.Services
             UserUuid = p.UserUuid,
             ProjectName = p.ProjectName,
             Description = p.Description,
-            Status = p.Status,
+            Status = (int)p.Status,
             CreatedAt = p.CreatedAt,
             ClosedAt = p.ClosedAt,
             DeletedAt = p.DeletedAt

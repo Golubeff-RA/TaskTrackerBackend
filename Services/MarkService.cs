@@ -65,24 +65,24 @@ namespace YourApp.Services
             if (mark == null)
                 throw new KeyNotFoundException($"Mark with ID {markId} not found");
 
-            mark.Title = dto.Title;
-            mark.Description = dto.Description;
+            if (dto.Title != null) mark.Title = dto.Title;
+            if (dto.Description != null) mark.Description = dto.Description;
 
             await _context.SaveChangesAsync();
             return Map(mark);
         }
 
-        public async Task<bool> DeleteMarkAsync(Guid userId, Guid markId)
+        public async Task<MarkResponseDto?> DeleteMarkAsync(Guid userId, Guid markId)
         {
             var mark = await _context.Marks
                 .Include(m => m.Project)
                 .FirstOrDefaultAsync(m => m.MarkUuid == markId && m.Project.UserUuid == userId);
-
-            if (mark == null) return false;
+            if (mark == null) return null;
 
             mark.DeletedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
-            return true;
+
+            return Map(mark);
         }
 
         private static MarkResponseDto Map(Mark m) => new()

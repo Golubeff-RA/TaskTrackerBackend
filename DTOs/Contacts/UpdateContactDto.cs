@@ -11,7 +11,6 @@ namespace YourApp.DTOs.Contacts
         /// Имя контакта
         /// </summary>
         /// <example>Иван Петров (обновлено)</example>
-        [Required(ErrorMessage = "Имя контакта обязательно")]
         [MinLength(1, ErrorMessage = "Имя не может быть пустым")]
         [MaxLength(255, ErrorMessage = "Имя не может быть длиннее 255 символов")]
         public string Name { get; set; }

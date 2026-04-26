@@ -72,12 +72,12 @@ namespace YourApp.Controllers
         /// <summary>
         /// Изменить справку
         /// </summary>
-        [HttpPut("{id}")]
+        [HttpPatch("{id}")]
         [ProducesResponseType(typeof(ReferenceDocResponseDto), 200)]
         [ProducesResponseType(404)]
         [ProducesResponseType(401)]
-        public async Task<IActionResult> Update(Guid id, [FromBody] UpdateReferenceDocDto dto)
-        {
+       public async Task<IActionResult> Update(Guid id, [FromBody] UpdateReferenceDocDto dto)
+       {
             try
             {
                 var userId = User.GetUserId();
@@ -86,10 +86,10 @@ namespace YourApp.Controllers
             }
             catch (KeyNotFoundException ex)
             {
-                return NotFound(new { message = ex.Message });
+                return NotFound(new { error = ex.Message });
             }
         }
-
+        
         /// <summary>
         /// Удалить справку (soft delete)
         /// </summary>
@@ -100,12 +100,12 @@ namespace YourApp.Controllers
         public async Task<IActionResult> Delete(Guid id)
         {
             var userId = User.GetUserId();
-            var result = await _service.DeleteAsync(userId, id);
+            
+            var doc = await _service.DeleteAsync(userId, id);
+            if (doc == null)
+                return NotFound(new { error = "Reference not found" });
 
-            if (!result)
-                return NotFound(new { message = "Reference was not found" });
-
-            return Ok(new { message = "Reference has been deleted" });
+            return Ok(doc);
         }
     }
 }

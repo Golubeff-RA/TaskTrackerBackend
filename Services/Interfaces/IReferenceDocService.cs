@@ -8,6 +8,6 @@ namespace YourApp.Services.Interfaces
         Task<ReferenceDocResponseDto> GetByIdAsync(Guid userId, Guid docId);
         Task<ReferenceDocResponseDto> CreateAsync(Guid userId, CreateReferenceDocDto dto);
         Task<ReferenceDocResponseDto> UpdateAsync(Guid userId, Guid docId, UpdateReferenceDocDto dto);
-        Task<bool> DeleteAsync(Guid userId, Guid docId);
+        Task<ReferenceDocResponseDto?> DeleteAsync(Guid userId, Guid docId);
     }
 }

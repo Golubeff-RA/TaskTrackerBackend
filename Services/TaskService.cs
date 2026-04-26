@@ -81,36 +81,34 @@ namespace YourApp.Services
             if (task == null)
                 throw new KeyNotFoundException($"Task with ID {taskId} not found");
 
-            task.Title = dto.Title;
-            task.Description = dto.Description;
-            task.Wave = dto.Wave;
+            if (dto.Title != null) task.Title = dto.Title;
+            if (dto.Description != null) task.Description = dto.Description;
+            if (dto.Wave.HasValue) task.Wave = dto.Wave; 
 
             await _context.SaveChangesAsync();
             return Map(task);
         }
 
-        public async Task<bool> CloseTaskAsync(Guid userId, Guid taskId)
+        public async Task<TaskResponseDto?> CloseTaskAsync(Guid userId, Guid taskId)
         {
             var task = await _context.Tasks
                 .Include(t => t.Project)
                 .FirstOrDefaultAsync(t => t.TaskUuid == taskId && t.Project.UserUuid == userId);
-
-            if (task == null) return false;
+            if (task == null) return null;
 
             task.Status = TaskaStatus.CLOSED;
             task.CompletedAt = DateTime.UtcNow;
-
             await _context.SaveChangesAsync();
-            return true;
+
+            return Map(task);
         }
 
-        public async Task<bool> BlockTaskAsync(Guid userId, Guid taskId, BlockTaskDto dto)
+        public async Task<TaskResponseDto?> BlockTaskAsync(Guid userId, Guid taskId, BlockTaskDto dto)
         {
             var task = await _context.Tasks
                 .Include(t => t.Project)
                 .FirstOrDefaultAsync(t => t.TaskUuid == taskId && t.Project.UserUuid == userId);
-
-            if (task == null) return false;
+            if (task == null) return null;
 
             task.Status = TaskaStatus.BLOCKED;
             task.BlockedUntil = dto.BlockedUntilMs.HasValue
@@ -118,7 +116,19 @@ namespace YourApp.Services
                 : null;
 
             await _context.SaveChangesAsync();
-            return true;
+
+            return Map(task);
+        }
+
+        public async Task<TaskResponseDto?> GetRandomTaskAsync(Guid userId)
+        {
+            var task = await _context.Tasks
+                .Include(t => t.Project)
+                .Where(t => t.Project.UserUuid == userId && t.Status == TaskaStatus.CREATED)
+                .OrderBy(_ => Guid.NewGuid())
+                .FirstOrDefaultAsync();
+
+            return task == null ? null : Map(task);
         }
 
         private static TaskResponseDto Map(Taska t) => new()
@@ -127,7 +137,7 @@ namespace YourApp.Services
             ProjectUuid = t.ProjectUuid,
             Title = t.Title,
             Description = t.Description,
-            Status = t.Status,
+            Status = (int)t.Status,
             Wave = t.Wave,
             CreatedAt = t.CreatedAt,
             BlockedUntil = t.BlockedUntil,

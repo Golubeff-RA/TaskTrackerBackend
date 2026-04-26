@@ -64,24 +64,22 @@ namespace YourApp.Services
             if (doc == null)
                 throw new KeyNotFoundException($"No help found with ID {docId}");
 
-            doc.Title = dto.Title;
-            doc.Content = dto.Content;
+            if (dto.Title != null) doc.Title = dto.Title;
+            if (dto.Content != null) doc.Content = dto.Content;
             doc.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
             return Map(doc);
         }
 
-        public async Task<bool> DeleteAsync(Guid userId, Guid docId)
+        public async Task<ReferenceDocResponseDto?> DeleteAsync(Guid userId, Guid docId)
         {
             var doc = await _context.ReferenceDocs
                 .FirstOrDefaultAsync(d => d.DocUuid == docId && d.UserUuid == userId);
-
-            if (doc == null) return false;
-
+            if (doc == null) return null;
             doc.DeletedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
-            return true;
+            return Map(doc);
         }
 
         private static ReferenceDocResponseDto Map(ReferenceDoc d) => new()

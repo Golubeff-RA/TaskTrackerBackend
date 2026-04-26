@@ -72,7 +72,7 @@ namespace YourApp.Controllers
         /// <summary>
         /// Изменить проект
         /// </summary>
-        [HttpPut("{id}")]
+        [HttpPatch("{id}")]
         [ProducesResponseType(typeof(ProjectResponseDto), 200)]
         [ProducesResponseType(404)]
         [ProducesResponseType(401)]
@@ -100,12 +100,11 @@ namespace YourApp.Controllers
         public async Task<IActionResult> Close(Guid id)
         {
             var userId = User.GetUserId();
-            var result = await _projectService.CloseProjectAsync(userId, id);
-
-            if (!result)
-                return NotFound(new { message = "Проект не найден" });
-
-            return Ok(new { message = "Проект закрыт" });
+            var project = await _projectService.CloseProjectAsync(userId, id);
+            if (project == null)
+                return NotFound(new { error = "Проект не найден" });
+                
+            return Ok(project);
         }
     }
 }

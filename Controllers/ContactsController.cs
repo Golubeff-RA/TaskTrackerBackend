@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YourApp.DTOs.Contacts;
@@ -9,9 +6,6 @@ using YourApp.Services.Interfaces;
 
 namespace YourApp.Controllers
 {
-    /// <summary>
-    /// Контроллер для управления контактами пользователя
-    /// </summary>
     [ApiController]
     [Route("api/[controller]")]
     [Authorize]
@@ -25,25 +19,6 @@ namespace YourApp.Controllers
         }
 
         /// <summary>
-        /// Создание нового контакта
-        /// </summary>
-        /// <param name="createContactDto">Данные для создания контакта</param>
-        /// <returns>Созданный контакт</returns>
-        /// <response code="201">Контакт успешно создан</response>
-        /// <response code="400">Ошибка валидации</response>
-        /// <response code="401">Не авторизован</response>
-        [HttpPost]
-        [ProducesResponseType(typeof(ContactResponseDto), 201)]
-        [ProducesResponseType(400)]
-        [ProducesResponseType(401)]
-        public async Task<IActionResult> CreateContact([FromBody] CreateContactDto createContactDto)
-        {
-            var userId = User.GetUserId();
-            var contact = await _contactService.CreateContactAsync(userId, createContactDto);
-            return CreatedAtAction(nameof(GetContactById), new { id = contact.ContactUuid }, contact);
-        }
-
-        /// <summary>
         /// Получение всех контактов текущего пользователя
         /// </summary>
         /// <returns>Список контактов</returns>
@@ -52,7 +27,7 @@ namespace YourApp.Controllers
         [HttpGet]
         [ProducesResponseType(typeof(List<ContactResponseDto>), 200)]
         [ProducesResponseType(401)]
-        public async Task<IActionResult> GetAllContacts()
+        public async Task<IActionResult> GetAll()
         {
             var userId = User.GetUserId();
             var contacts = await _contactService.GetAllContactsAsync(userId);
@@ -71,7 +46,7 @@ namespace YourApp.Controllers
         [ProducesResponseType(typeof(ContactResponseDto), 200)]
         [ProducesResponseType(404)]
         [ProducesResponseType(401)]
-        public async Task<IActionResult> GetContactById(Guid id)
+        public async Task<IActionResult> GetById(Guid id)
         {
             try
             {
@@ -81,8 +56,27 @@ namespace YourApp.Controllers
             }
             catch (KeyNotFoundException ex)
             {
-                return NotFound(new { message = ex.Message });
+                return NotFound(new { error = ex.Message });
             }
+        }
+
+        /// <summary>
+        /// Создание нового контакта
+        /// </summary>
+        /// <param name="createContactDto">Данные для создания контакта</param>
+        /// <returns>Созданный контакт</returns>
+        /// <response code="201">Контакт успешно создан</response>
+        /// <response code="400">Ошибка валидации</response>
+        /// <response code="401">Не авторизован</response>
+        [HttpPost]
+        [ProducesResponseType(typeof(ContactResponseDto), 200)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(401)]
+        public async Task<IActionResult> Create([FromBody] CreateContactDto dto)
+        {
+            var userId = User.GetUserId();
+            var contact = await _contactService.CreateContactAsync(userId, dto);
+            return Ok(contact);
         }
 
         /// <summary>
@@ -95,22 +89,21 @@ namespace YourApp.Controllers
         /// <response code="404">Контакт не найден</response>
         /// <response code="400">Ошибка валидации</response>
         /// <response code="401">Не авторизован</response>
-        [HttpPut("{id}")]
+        [HttpPatch("{id}")]
         [ProducesResponseType(typeof(ContactResponseDto), 200)]
         [ProducesResponseType(404)]
-        [ProducesResponseType(400)]
         [ProducesResponseType(401)]
-        public async Task<IActionResult> UpdateContact(Guid id, [FromBody] UpdateContactDto updateContactDto)
+        public async Task<IActionResult> Update(Guid id, [FromBody] UpdateContactDto dto)
         {
             try
             {
                 var userId = User.GetUserId();
-                var contact = await _contactService.UpdateContactAsync(userId, id, updateContactDto);
+                var contact = await _contactService.UpdateContactAsync(userId, id, dto);
                 return Ok(contact);
             }
             catch (KeyNotFoundException ex)
             {
-                return NotFound(new { message = ex.Message });
+                return NotFound(new { error = ex.Message });
             }
         }
 
@@ -122,61 +115,18 @@ namespace YourApp.Controllers
         /// <response code="404">Контакт не найден</response>
         /// <response code="401">Не авторизован</response>
         [HttpDelete("{id}")]
-        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(ContactResponseDto), 200)]
         [ProducesResponseType(404)]
         [ProducesResponseType(401)]
-        public async Task<IActionResult> DeleteContact(Guid id)
+        public async Task<IActionResult> Delete(Guid id)
         {
             var userId = User.GetUserId();
-            var result = await _contactService.DeleteContactAsync(userId, id);
+            var contact = await _contactService.DeleteContactAsync(userId, id);
 
-            if (!result)
-            {
-                return NotFound(new { message = "Контакт не найден" });
-            }
+            if (contact == null)
+                return NotFound(new { error = "Contact not found" });
 
-            return NoContent();
-        }
-
-        /// <summary>
-        /// Мягкое удаление контакта (установка deleted_at)
-        /// </summary>
-        /// <param name="id">UUID контакта</param>
-        /// <response code="200">Контакт успешно удален</response>
-        /// <response code="404">Контакт не найден</response>
-        /// <response code="401">Не авторизован</response>
-        [HttpDelete("{id}/soft")]
-        [ProducesResponseType(200)]
-        [ProducesResponseType(404)]
-        [ProducesResponseType(401)]
-        public async Task<IActionResult> SoftDeleteContact(Guid id)
-        {
-            var userId = User.GetUserId();
-            var result = await _contactService.SoftDeleteContactAsync(userId, id);
-
-            if (!result)
-            {
-                return NotFound(new { message = "Контакт не найден" });
-            }
-
-            return Ok(new { message = "Контакт удален" });
-        }
-
-        /// <summary>
-        /// Поиск контактов по имени или комментарию
-        /// </summary>
-        /// <param name="searchTerm">Поисковый запрос</param>
-        /// <returns>Список найденных контактов</returns>
-        /// <response code="200">Результаты поиска</response>
-        /// <response code="401">Не авторизован</response>
-        [HttpGet("search")]
-        [ProducesResponseType(typeof(List<ContactResponseDto>), 200)]
-        [ProducesResponseType(401)]
-        public async Task<IActionResult> SearchContacts([FromQuery] string searchTerm)
-        {
-            var userId = User.GetUserId();
-            var contacts = await _contactService.SearchContactsAsync(userId, searchTerm);
-            return Ok(contacts);
+            return Ok(contact);
         }
     }
 }

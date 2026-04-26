@@ -5,7 +5,6 @@ namespace YourApp.DTOs.Notes
 {
     public class UpdateNoteDto
     {
-        [Required]
         [MinLength(1)]
         [MaxLength(255)]
         public string Title { get; set; }

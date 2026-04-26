@@ -7,6 +7,6 @@ namespace YourApp.Services.Interfaces
         Task<List<MarkResponseDto>> GetMarksByProjectAsync(Guid userId, Guid projectId);
         Task<MarkResponseDto> CreateMarkAsync(Guid userId, Guid projectId, CreateMarkDto dto);
         Task<MarkResponseDto> UpdateMarkAsync(Guid userId, Guid markId, UpdateMarkDto dto);
-        Task<bool> DeleteMarkAsync(Guid userId, Guid markId);
+        Task<MarkResponseDto?> DeleteMarkAsync(Guid userId, Guid markId);
     }
 }

@@ -1,16 +1,11 @@
-using System;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YourApp.DTOs.Notes;
-using YourApp.Services.Interfaces;
 using YourApp.Extensions;
+using YourApp.Services.Interfaces;
 
 namespace YourApp.Controllers
 {
-    /// <summary>
-    /// Контроллер для управления заметками пользователя
-    /// </summary>
     [ApiController]
     [Route("api/[controller]")]
     [Authorize]
@@ -24,34 +19,26 @@ namespace YourApp.Controllers
         }
 
         /// <summary>
-        /// Создание новой заметки
+        /// Создать заметку
         /// </summary>
-        /// <param name="createNoteDto">Данные для создания заметки</param>
-        /// <returns>Созданная заметка</returns>
-        /// <response code="201">Заметка успешно создана</response>
-        /// <response code="400">Ошибка валидации</response>
-        /// <response code="401">Не авторизован</response>
         [HttpPost]
-        [ProducesResponseType(typeof(NoteResponseDto), 201)]
+        [ProducesResponseType(typeof(NoteResponseDto), 200)]
         [ProducesResponseType(400)]
         [ProducesResponseType(401)]
-        public async Task<IActionResult> CreateNote([FromBody] CreateNoteDto createNoteDto)
+        public async Task<IActionResult> Create([FromBody] CreateNoteDto dto)
         {
             var userId = User.GetUserId();
-            var note = await _noteService.CreateNoteAsync(userId, createNoteDto);
-            return CreatedAtAction(nameof(GetNoteById), new { id = note.NoteUuid }, note);
+            var note = await _noteService.CreateNoteAsync(userId, dto);
+            return Ok(note);
         }
 
         /// <summary>
-        /// Получение всех заметок текущего пользователя
+        /// Список всех заметок пользователя
         /// </summary>
-        /// <returns>Список заметок</returns>
-        /// <response code="200">Успешное получение списка заметок</response>
-        /// <response code="401">Не авторизован</response>
         [HttpGet]
         [ProducesResponseType(typeof(List<NoteResponseDto>), 200)]
         [ProducesResponseType(401)]
-        public async Task<IActionResult> GetAllNotes()
+        public async Task<IActionResult> GetAll()
         {
             var userId = User.GetUserId();
             var notes = await _noteService.GetAllNotesAsync(userId);
@@ -59,18 +46,13 @@ namespace YourApp.Controllers
         }
 
         /// <summary>
-        /// Получение заметки по ID
+        /// Получить одну заметку
         /// </summary>
-        /// <param name="id">UUID заметки</param>
-        /// <returns>Заметка</returns>
-        /// <response code="200">Заметка найдена</response>
-        /// <response code="404">Заметка не найдена</response>
-        /// <response code="401">Не авторизован</response>
         [HttpGet("{id}")]
         [ProducesResponseType(typeof(NoteResponseDto), 200)]
         [ProducesResponseType(404)]
         [ProducesResponseType(401)]
-        public async Task<IActionResult> GetNoteById(Guid id)
+        public async Task<IActionResult> GetById(Guid id)
         {
             try
             {
@@ -80,85 +62,26 @@ namespace YourApp.Controllers
             }
             catch (KeyNotFoundException ex)
             {
-                return NotFound(new { message = ex.Message });
+                return NotFound(new { error = ex.Message });
             }
         }
 
         /// <summary>
-        /// Обновление заметки
+        /// Удалить заметку (soft delete)
         /// </summary>
-        /// <param name="id">UUID заметки</param>
-        /// <param name="updateNoteDto">Обновленные данные заметки</param>
-        /// <returns>Обновленная заметка</returns>
-        /// <response code="200">Заметка успешно обновлена</response>
-        /// <response code="404">Заметка не найдена</response>
-        /// <response code="400">Ошибка валидации</response>
-        /// <response code="401">Не авторизован</response>
-        [HttpPut("{id}")]
+        [HttpDelete("{id}")]
         [ProducesResponseType(typeof(NoteResponseDto), 200)]
         [ProducesResponseType(404)]
-        [ProducesResponseType(400)]
         [ProducesResponseType(401)]
-        public async Task<IActionResult> UpdateNote(Guid id, [FromBody] UpdateNoteDto updateNoteDto)
-        {
-            try
-            {
-                var userId = User.GetUserId();
-                var note = await _noteService.UpdateNoteAsync(userId, id, updateNoteDto);
-                return Ok(note);
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new { message = ex.Message });
-            }
-        }
-
-        /// <summary>
-        /// Полное удаление заметки (из базы данных)
-        /// </summary>
-        /// <param name="id">UUID заметки</param>
-        /// <response code="204">Заметка успешно удалена</response>
-        /// <response code="404">Заметка не найдена</response>
-        /// <response code="401">Не авторизован</response>
-        [HttpDelete("{id}")]
-        [ProducesResponseType(204)]
-        [ProducesResponseType(404)]
-        [ProducesResponseType(401)]
-        public async Task<IActionResult> DeleteNote(Guid id)
+        public async Task<IActionResult> Delete(Guid id)
         {
             var userId = User.GetUserId();
-            var result = await _noteService.DeleteNoteAsync(userId, id);
-            
-            if (!result)
-            {
-                return NotFound(new { message = "Заметка не найдена" });
-            }
-            
-            return NoContent();
-        }
+            var note = await _noteService.DeleteNoteAsync(userId, id);
 
-        /// <summary>
-        /// Мягкое удаление заметки (установка deleted_at)
-        /// </summary>
-        /// <param name="id">UUID заметки</param>
-        /// <response code="200">Заметка успешно удалена</response>
-        /// <response code="404">Заметка не найдена</response>
-        /// <response code="401">Не авторизован</response>
-        [HttpDelete("{id}/soft")]
-        [ProducesResponseType(200)]
-        [ProducesResponseType(404)]
-        [ProducesResponseType(401)]
-        public async Task<IActionResult> SoftDeleteNote(Guid id)
-        {
-            var userId = User.GetUserId();
-            var result = await _noteService.SoftDeleteNoteAsync(userId, id);
-            
-            if (!result)
-            {
-                return NotFound(new { message = "Заметка не найдена" });
-            }
-            
-            return Ok(new { message = "Заметка удалена" });
+            if (note == null)
+                return NotFound(new { error = "Note not found" });
+
+            return Ok(note);
         }
     }
 }
