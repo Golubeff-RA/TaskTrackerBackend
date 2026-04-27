@@ -89,5 +89,22 @@ namespace YourApp.Controllers
                 return NotFound(new { message = ex.Message });
             }
         }
+
+        /// <summary>
+        /// Закрыть проект
+        /// </summary>
+        [HttpPatch("{id}/close")]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(401)]
+        public async Task<IActionResult> Close(Guid id)
+        {
+            var userId = User.GetUserId();
+            var project = await _projectService.CloseProjectAsync(userId, id);
+            if (project == null)
+                return NotFound(new { error = "Проект не найден" });
+                
+            return Ok(project);
+        }
     }
 }

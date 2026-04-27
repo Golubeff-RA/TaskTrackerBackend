@@ -68,5 +68,23 @@ namespace YourApp.Controllers
                 return NotFound(new { error = ex.Message });
             }
         }
+
+        /// <summary>
+        /// Завершить задачу
+        /// </summary>
+        [HttpPost("{taskId}/close")]
+        [ProducesResponseType(typeof(TaskResponseDto), 200)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(401)]
+        public async Task<IActionResult> Close(Guid taskId)
+        {
+            var userId = User.GetUserId();
+            var task = await _taskService.CloseTaskAsync(userId, taskId);
+
+            if (task == null)
+                return NotFound(new { error = "Task not found" });
+
+            return Ok(task);
+        }
     }
 }

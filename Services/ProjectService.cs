@@ -47,7 +47,7 @@ namespace YourApp.Services
                 UserUuid = userId,
                 ProjectName = dto.ProjectName,
                 Description = dto.Description,
-                Status = ProjectStatus.CREATED,
+                Status = dto.Status ?? ProjectStatus.CREATED,
                 CreatedAt = DateTime.UtcNow
             };
 
