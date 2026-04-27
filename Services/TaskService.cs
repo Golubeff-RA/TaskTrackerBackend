@@ -73,7 +73,10 @@ namespace YourApp.Services
                 Title = dto.Title,
                 Description = dto.Description,
                 Wave = dto.Wave,
-                Status = TaskaStatus.CREATED,
+                Status = dto.Status ?? TaskaStatus.CREATED,
+                BlockedUntil = dto.BlockedUntilMs.HasValue 
+                    ? dto.BlockedUntilMs.Value.FromUnixMs() 
+                    : null,
                 CreatedAt = DateTime.UtcNow
             };
 

@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using YourApp.Enums;
 
 namespace YourApp.DTOs.Tasks
 {
@@ -12,5 +13,9 @@ namespace YourApp.DTOs.Tasks
         public string Description { get; set; } = string.Empty;
 
         public int Wave { get; set; } = 0;
+
+        public TaskaStatus? Status { get; set; } = TaskaStatus.CREATED;
+
+        public long? BlockedUntilMs { get; set; }
     }
 }
