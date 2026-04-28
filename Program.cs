@@ -10,6 +10,26 @@ using YourApp.Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+
+        // policy.WithOrigins(
+        //         "http://localhost:3000",     // React
+        //         "http://localhost:5173",     // Vite
+        //         "http://localhost:4200",     // Angular
+        //         "http://localhost:8080"      // Тот же origin
+        //     )
+        //     .AllowAnyMethod()
+        //     .AllowAnyHeader()
+        //     .AllowCredentials(); // НЕ использовать с AllowAnyOrigin
+    });
+});
+
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
@@ -104,20 +124,21 @@ builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "Auth API V1");
-        c.RoutePrefix = "swagger"; // Открывает Swagger по /swagger
+        c.RoutePrefix = "swagger";
         c.DocumentTitle = "Auth API Documentation";
-        c.DefaultModelsExpandDepth(-1); // Скрывает схемы моделей по умолчанию
+        c.DefaultModelsExpandDepth(-1);
     });
 }
 
 app.UseHttpsRedirection();
+app.UseRouting();
+app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
